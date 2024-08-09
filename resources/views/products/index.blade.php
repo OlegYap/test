@@ -1,194 +1,3 @@
-{{--@extends('layouts.app')
-
-@section('content')
-    <div class="container">
-        <h1 class="mt-5">Admin Panel</h1>
-        <button class="btn btn-primary mb-3" id="add-product" data-toggle="modal" data-target="#addModal">Add Product</button>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Category</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($products as $product)
-                <tr>
-                    <td>{{ $product->name }}</td>
-                    <td>{{ $product->price }}</td>
-                    <td>{{ $product->category }}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning edit-btn" data-id="{{ $product->id }}" data-toggle="modal" data-target="#editModal"><i class="fas fa-pen"></i></button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="{{ $product->id }}"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Add Modal -->
-    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addModalLabel">Add Product</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="addForm" enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group">
-                            <label for="name">Name</label>
-                            <input type="text" class="form-control" id="name" name="name">
-                        </div>
-                        <div class="form-group">
-                            <label for="price">Price</label>
-                            <input type="number" class="form-control" id="price" name="price">
-                        </div>
-                        <div class="form-group">
-                            <label for="category">Category</label>
-                            <input type="text" class="form-control" id="category" name="category">
-                        </div>
-                        <div class="form-group">
-                            <label for="image">Image</label>
-                            <input type="file" class="form-control-file" id="image" name="image">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveProduct">Save Product</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="editForm" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" id="editId" name="id">
-                        <div class="form-group">
-                            <label for="editName">Name</label>
-                            <input type="text" class="form-control" id="editName" name="name">
-                        </div>
-                        <div class="form-group">
-                            <label for="editPrice">Price</label>
-                            <input type="number" class="form-control" id="editPrice" name="price">
-                        </div>
-                        <div class="form-group">
-                            <label for="editCategory">Category</label>
-                            <input type="text" class="form-control" id="editCategory" name="category">
-                        </div>
-                        <div class="form-group">
-                            <label for="editImage">Image</label>
-                            <input type="file" class="form-control-file" id="editImage" name="image">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="saveChanges">Save changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        $(document).ready(function() {
-            // Add Product
-            $('#saveProduct').click(function() {
-                var formData = new FormData($('#addForm')[0]);
-                $.ajax({
-                    url: '{{ route('products.store') }}',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        location.reload();
-                    },
-                    error: function(response) {
-                        console.log(response);
-                    }
-                });
-            });
-
-            // Edit Product
-            $('.edit-btn').click(function() {
-                var id = $(this).data('id');
-                $.ajax({
-                    url: '/products/' + id + '/edit',
-                    type: 'GET',
-                    success: function(response) {
-                        $('#editId').val(response.id);
-                        $('#editName').val(response.name);
-                        $('#editPrice').val(response.price);
-                        $('#editCategory').val(response.category);
-                    },
-                    error: function(response) {
-                        console.log(response);
-                    }
-                });
-            });
-
-            $('#saveChanges').click(function() {
-                var id = $('#editId').val();
-                var formData = new FormData($('#editForm')[0]);
-                formData.append('_method', 'PUT');
-                $.ajax({
-                    url: '/products/' + id,
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        location.reload();
-                    },
-                    error: function(response) {
-                        console.log(response);
-                    }
-                });
-            });
-
-            // Delete Product
-            $('.delete-btn').click(function() {
-                var id = $(this).data('id');
-                if (confirm('Are you sure you want to delete this product?')) {
-                    $.ajax({
-                        url: '/products/' + id,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            location.reload();
-                        },
-                        error: function(response) {
-                            console.log(response);
-                        }
-                    });
-                }
-            });
-        });
-    </script>
-@endsection--}}
-
 @extends('layouts.app')
 <!DOCTYPE html>
 <html lang="en">
@@ -197,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Products</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 </head>
 <body>
 <div class="admin-panel">
@@ -232,6 +40,9 @@
                     <td>${{ number_format($product->price, 2) }}</td>
                     <td>{{ $product->category }}</td>
                     <td class="actions">
+{{--                        <a href="{{ route('products.edit', $product->id) }}" class="btn btn-edit">
+                            <i class="fas fa-pencil-alt"></i>
+                        </a>--}}
                         <button class="btn btn-edit" onclick="openEditModal({{ $product->id }})">
                             <i class="fas fa-pencil-alt"></i>
                         </button>
@@ -260,6 +71,7 @@
         <form id="edit-product-form" method="POST" action="">
             @csrf
             @method('PUT')
+
             <label for="product-name">Название:</label>
             <input type="text" id="product-name" name="name" required>
 
@@ -269,12 +81,14 @@
             <label for="product-category">Категория:</label>
             <input type="text" id="product-category" name="category" required>
 
+            <label for="product-description">Описание:</label>
+            <textarea id="product-description" name="description" rows="4" required></textarea>
+
             <button type="submit" class="btn btn-primary">Сохранить</button>
         </form>
     </div>
 </div>
 
-<script src="{{ asset('js/script.js') }}"></script>
 </body>
 </html>
 
@@ -287,12 +101,12 @@
                 document.getElementById('product-name').value = data.name;
                 document.getElementById('product-price').value = data.price;
                 document.getElementById('product-category').value = data.category;
+                document.getElementById('product-description').value = data.description; // Добавлено
                 document.getElementById('edit-product-form').action = `/products/${productId}`;
                 document.getElementById('edit-product-modal').style.display = 'block';
             })
             .catch(error => console.error('Error fetching product data:', error));
     }
-
     function closeEditModal() {
         document.getElementById('edit-product-modal').style.display = 'none';
     }

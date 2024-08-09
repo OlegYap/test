@@ -4,11 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
+
     public function index()
     {
         $products = Product::paginate(10);
@@ -23,19 +32,7 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request)
     {
-        $product = new Product();
-        $product->name = $request->name;
-        $product->description = $request->description;
-        $product->price = $request->price;
-        $product->category = $request->category;
-
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
-            $product->image = $imagePath;
-        }
-
-        $product->save();
-
+        $this->productService->store($request);
         return redirect()->route('products.index');
     }
 
@@ -47,26 +44,12 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         return response()->json($product);
-
+/*        return view('products.edit', compact('product'));*/
     }
 
     public function update(ProductRequest $request, Product $product)
     {
-        $product->name = $request->name;
-        $product->description = $request->description;
-        $product->price = $request->price;
-        $product->category = $request->category;
-
-        if ($request->hasFile('image')) {
-            if ($product->image && Storage::exists('public/' . $product->image)) {
-                Storage::delete('public/' . $product->image);
-            }
-            $imagePath = $request->file('image')->store('images', 'public');
-            $product->image = $imagePath;
-        }
-
-        $product->save();
-
+        $this->productService->update($request, $product);
         return redirect()->route('products.index');
     }
 
